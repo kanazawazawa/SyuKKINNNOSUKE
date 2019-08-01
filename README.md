@@ -1,5 +1,6 @@
 # SyuKKINNNOSUKE
 PC起動時に勤之助の出社ボタンを自動で押すアプリケーションです。  
+C# Selenium Chrome
 ## Install
 発行して生成される SyuKKINNNOSUKE.exe と chromedriver.exe を任意のフォルダに置いておきます。  
 ファイル名を指定して実行 shell:startup で開かれるフォルダに SyuKKINNNOSUKE.exe のショートカットを置いておきます。  
