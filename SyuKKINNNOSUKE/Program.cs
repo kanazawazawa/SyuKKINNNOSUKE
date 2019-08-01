@@ -44,7 +44,8 @@ namespace SyuKKINNNOSUKE
                 Environment.SetEnvironmentVariable(EnvironmentVarPassword, password, EnvironmentVariableTarget.User);
             }
 
-            using (IWebDriver webDriver = new ChromeDriver(Environment.CurrentDirectory))
+            //using (IWebDriver webDriver = new ChromeDriver(Environment.CurrentDirectory))
+            using (IWebDriver webDriver = new ChromeDriver())
             {
                 webDriver.Url = @"https://www.e4628.jp/";
                 IWebElement elementCompanycd = webDriver.FindElement(By.CssSelector("#y_companycd"));
