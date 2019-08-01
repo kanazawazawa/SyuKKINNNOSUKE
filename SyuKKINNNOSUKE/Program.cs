@@ -56,6 +56,7 @@ namespace SyuKKINNNOSUKE
                 elementPassword.SendKeys(password);
                 elementPassword.Submit();
                 Thread.Sleep(TimeSpan.FromSeconds(1));
+
                 // 出社押す
                 // 出社、退社押してない状態
                 // 出社 #tr_submit_form > table > tbody > tr > td:nth-child(1) > button
