@@ -56,16 +56,24 @@ namespace SyuKKINNNOSUKE
                 elementLogincd.SendKeys(logincd);
                 elementPassword.SendKeys(password);
                 elementPassword.Submit();
+
                 Thread.Sleep(TimeSpan.FromSeconds(1));
 
 
                 // コマンドライン引数で shutdown が指定された場合、退社を押してシャットダウンする
                 if (args.Length != 0 && (args[0] == "shutdown"))
                 {
+                    try
+                    {
+                        IWebElement elementTaisya = webDriver.FindElement(By.XPath("//a[contains(text(),'退社')]"));
+                        elementTaisya.Click();
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
 
-                    //IWebElement elementSyussya = webDriver.FindElement(By.XPath($x('//button[contains(text(), "退社")]')));
-                    IWebElement elementSyussya = webDriver.FindElement(By.XPath("//a[contains(text(),'退社')]"));
-                    elementSyussya.Click();
+                    Thread.Sleep(TimeSpan.FromSeconds(3));
 
                     System.Diagnostics.ProcessStartInfo psi = new System.Diagnostics.ProcessStartInfo();
 
