@@ -58,22 +58,43 @@ namespace SyuKKINNNOSUKE
                 elementPassword.Submit();
                 Thread.Sleep(TimeSpan.FromSeconds(1));
 
-                // 出社押す
-                // 出社、退社押してない状態
-                // 出社 #tr_submit_form > table > tbody > tr > td:nth-child(1) > button
-                // 退社 #tr_submit_form > table > tbody > tr > td:nth-child(2) > button
-                // 出社済み、退社押してない状態
-                // 退社 #tr_submit_form > table > tbody > tr > td:nth-child(3) > button
-                try
+
+                // コマンドライン引数で shutdown が指定された場合、退社を押してシャットダウンする
+                if (args.Length != 0 && (args[0] == "shutdown"))
                 {
-                    // xPath の方がいいのでは？$x('//button[contains(text(), "出社")]')
-                    IWebElement elementSyussya = webDriver.FindElement(By.CssSelector("#tr_submit_form > table > tbody > tr > td:nth-child(1) > button"));
+
+                    //IWebElement elementSyussya = webDriver.FindElement(By.XPath($x('//button[contains(text(), "退社")]')));
+                    IWebElement elementSyussya = webDriver.FindElement(By.XPath("//a[contains(text(),'退社')]"));
                     elementSyussya.Click();
+
+                    System.Diagnostics.ProcessStartInfo psi = new System.Diagnostics.ProcessStartInfo();
+
+                    psi.FileName = "shutdown.exe";
+                    psi.Arguments = "-s -f";
+
+                    // シャットダウン
+                    System.Diagnostics.Process p = System.Diagnostics.Process.Start(psi);
                 }
-                catch (Exception e)
+                else
                 {
-                    Console.WriteLine(e);
+                    // 出社押す
+                    // 出社、退社押してない状態
+                    // 出社 #tr_submit_form > table > tbody > tr > td:nth-child(1) > button
+                    // 退社 #tr_submit_form > table > tbody > tr > td:nth-child(2) > button
+                    // 出社済み、退社押してない状態
+                    // 退社 #tr_submit_form > table > tbody > tr > td:nth-child(3) > button
+                    try
+                    {
+                        // xPath の方がいいのでは？$x('//button[contains(text(), "出社")]')
+                        IWebElement elementSyussya = webDriver.FindElement(By.CssSelector("#tr_submit_form > table > tbody > tr > td:nth-child(1) > button"));
+                        elementSyussya.Click();
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
                 }
+
                 // ブラウザを閉じる
                 webDriver.Quit();
             }
