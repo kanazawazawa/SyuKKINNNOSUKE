@@ -4,6 +4,9 @@ using System;
 using System.Text;
 using System.Threading;
 using System.Security.Cryptography;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.IO;
 
 namespace SyuKKINNNOSUKE
 {
@@ -55,6 +58,16 @@ namespace SyuKKINNNOSUKE
                 key = Guid.NewGuid().ToString("N").Substring(0, password.Length);
                 Environment.SetEnvironmentVariable(EnvironmentVarPassword, ToUnreadable(password, key), EnvironmentVariableTarget.User);
                 Environment.SetEnvironmentVariable(EnvironmentVarKey, key, EnvironmentVariableTarget.User);
+
+                if (!ExistsStartupFile())
+                {
+                    Console.WriteLine("スタートアップに登録しますか？(y/(any))");
+                    var res = Console.ReadLine();
+                    if (res.ToLower() == "y")
+                    {
+                        SetStartUpFile();
+                    }
+                }
             }
             else
             {
@@ -180,7 +193,53 @@ namespace SyuKKINNNOSUKE
             return Encoding.ASCII.GetString(targetCharacterConvertedByte);
         }
 
+        private static void SetStartUpFile()
+        {
+            var startUpFilePath = StartupFilePath();
+            var applicationName = ApplicationName();
+            var exePath = $@"{Directory.GetCurrentDirectory()}\{applicationName}.exe";
 
+            Type t = Type.GetTypeFromCLSID(new Guid("72C24DD5-D70A-438B-8A42-98424B88AFB8"));
+            object shell = Activator.CreateInstance(t);
+
+            object shortcut = t.InvokeMember("CreateShortcut",
+                BindingFlags.InvokeMethod, null, shell,
+                new object[] { startUpFilePath });
+
+            t.InvokeMember("TargetPath",
+                BindingFlags.SetProperty, null, shortcut,
+                new object[] { exePath });
+
+            t.InvokeMember("IconLocation",
+                BindingFlags.SetProperty, null, shortcut,
+                new object[] { exePath + ",0" });
+
+            t.InvokeMember("Save",
+                BindingFlags.InvokeMethod,
+                null, shortcut, null);
+
+            Marshal.FinalReleaseComObject(shortcut);
+            Marshal.FinalReleaseComObject(shell);
+        }
+
+        private static bool ExistsStartupFile()
+        {
+            return File.Exists(StartupFilePath());
+        }
+
+        private static string StartupFilePath()
+        {
+            var applicationName = ApplicationName();
+            var startUpFileName = $"{applicationName}.lnk";
+            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Startup), startUpFileName);
+        }
+
+        private static string ApplicationName()
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+            var attribute = Attribute.GetCustomAttribute(assembly, typeof(AssemblyTitleAttribute)) as AssemblyTitleAttribute;
+            return attribute.Title;
+        }
 
     }
 }
