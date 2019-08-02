@@ -1,8 +1,7 @@
 {
   "profiles": {
     "SyuKKINNNOSUKE": {
-      "commandName": "Project",
-      "commandLineArgs": "shutdown"
+      "commandName": "Project"
     }
   }
 }

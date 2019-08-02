@@ -3,6 +3,8 @@ using OpenQA.Selenium.Chrome;
 using System;
 using System.Text;
 using System.Threading;
+using System.Security.Cryptography;
+
 namespace SyuKKINNNOSUKE
 {
     internal class Program
@@ -12,6 +14,8 @@ namespace SyuKKINNNOSUKE
             var EnvironmentVarCompanycd = "SYUKKINNNOSUKE_COMPANYCD";
             var EnvironmentVarLogincd = "SYUKKINNNOSUKE_LOGINCD";
             var EnvironmentVarPassword = "SYUKKINNNOSUKE_PASS";
+            var EnvironmentVarKey = "SYUKKINNNOSUKE_KEY";
+
             // コマンドライン引数で clear が指定された場合、ログイン情報をリセットする
             if (args.Length != 0 && (args[0] == "clear" || args[0] == "Clear"))
             {
@@ -19,12 +23,17 @@ namespace SyuKKINNNOSUKE
                 Environment.SetEnvironmentVariable(EnvironmentVarCompanycd, string.Empty, EnvironmentVariableTarget.User);
                 Environment.SetEnvironmentVariable(EnvironmentVarLogincd, string.Empty, EnvironmentVariableTarget.User);
                 Environment.SetEnvironmentVariable(EnvironmentVarPassword, string.Empty, EnvironmentVariableTarget.User);
+                Environment.SetEnvironmentVariable(EnvironmentVarKey, string.Empty, EnvironmentVariableTarget.User);
                 Environment.Exit(0);
             }
             var companycd = Environment.GetEnvironmentVariable(EnvironmentVarCompanycd, EnvironmentVariableTarget.User);
             var logincd = Environment.GetEnvironmentVariable(EnvironmentVarLogincd, EnvironmentVariableTarget.User);
             var password = Environment.GetEnvironmentVariable(EnvironmentVarPassword, EnvironmentVariableTarget.User);
-            if (string.IsNullOrEmpty(companycd) || string.IsNullOrEmpty(logincd) || string.IsNullOrEmpty(password))
+            var key = Environment.GetEnvironmentVariable(EnvironmentVarKey, EnvironmentVariableTarget.User);
+
+
+            // ログイン情報が保存されていない場合、入力してもらう
+            if (string.IsNullOrEmpty(companycd) || string.IsNullOrEmpty(logincd) || string.IsNullOrEmpty(password) || string.IsNullOrEmpty(key))
             {
                 Console.WriteLine("お客様IDを入力してください");
                 companycd = Console.ReadLine();
@@ -41,9 +50,19 @@ namespace SyuKKINNNOSUKE
                 // ユーザー環境変数に保存
                 Environment.SetEnvironmentVariable(EnvironmentVarCompanycd, companycd, EnvironmentVariableTarget.User);
                 Environment.SetEnvironmentVariable(EnvironmentVarLogincd, logincd, EnvironmentVariableTarget.User);
-                Environment.SetEnvironmentVariable(EnvironmentVarPassword, password, EnvironmentVariableTarget.User);
+
+                // 読めなくする
+                key = Guid.NewGuid().ToString("N").Substring(0, password.Length);
+                Environment.SetEnvironmentVariable(EnvironmentVarPassword, ToUnreadable(password, key), EnvironmentVariableTarget.User);
+                Environment.SetEnvironmentVariable(EnvironmentVarKey, key, EnvironmentVariableTarget.User);
+            }
+            else
+            {
+                // 読めるようにする
+                password = ToCanRead(password, key);
             }
 
+            // chromedriver.exe の更新をどうするか。
             //using (IWebDriver webDriver = new ChromeDriver(Environment.CurrentDirectory))
             using (IWebDriver webDriver = new ChromeDriver())
             {
@@ -106,5 +125,62 @@ namespace SyuKKINNNOSUKE
                 webDriver.Quit();
             }
         }
+
+        // 読めなくする
+        private static string ToUnreadable(string targetCharacter, string xorKey)
+        {
+            byte[] targetCharacterConvertedByte = Encoding.ASCII.GetBytes(targetCharacter);
+            byte[] xorKeyConvertedByte = Encoding.ASCII.GetBytes(xorKey);
+
+            int j = 0;
+            string targetCharacterToUnreadable = string.Empty;
+            for (int i = 0; i < targetCharacterConvertedByte.Length; i++)
+            {
+                if (j < xorKeyConvertedByte.Length)
+                {
+                    j++;
+                }
+                else
+                {
+                    j = 1;
+                }
+
+                targetCharacterConvertedByte[i] = (byte)(targetCharacterConvertedByte[i] ^ xorKeyConvertedByte[j - 1]);
+                string ValueConvertedHex = Convert.ToString(targetCharacterConvertedByte[i], 16).PadLeft(2, '0');
+                targetCharacterToUnreadable += ValueConvertedHex;
+            }
+            return targetCharacterToUnreadable;
+        }
+
+        // 読めなくしたものを読めるようにする
+        private static string ToCanRead(string targetCharacter, string xorKey)
+        {
+            byte[] targetCharacterConvertedByte = new byte[targetCharacter.Length / 2];
+            byte[] xorKeyConvertedByte = Encoding.ASCII.GetBytes(xorKey);
+
+            for (int i = 0; i < targetCharacter.Length / 2; i++)
+            {
+                int ValueConvertedDecimalNumber = Convert.ToInt32(targetCharacter.Substring(i * 2, 2), 16);
+                targetCharacterConvertedByte[i] = byte.Parse(ValueConvertedDecimalNumber.ToString());
+            }
+
+            int j = 0;
+            for (int i = 0; i < targetCharacterConvertedByte.Length; i++)
+            {
+                if (j < xorKeyConvertedByte.Length)
+                {
+                    j++;
+                }
+                else
+                {
+                    j = 1;
+                }
+                targetCharacterConvertedByte[i] = (byte)(targetCharacterConvertedByte[i] ^ xorKeyConvertedByte[j - 1]);
+            }
+            return Encoding.ASCII.GetString(targetCharacterConvertedByte);
+        }
+
+
+
     }
 }
