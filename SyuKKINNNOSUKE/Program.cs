@@ -65,7 +65,7 @@ namespace SyuKKINNNOSUKE
                 {
                     try
                     {
-                        IWebElement elementTaisya = webDriver.FindElement(By.XPath("//a[contains(text(),'退社')]"));
+                        IWebElement elementTaisya = webDriver.FindElement(By.XPath("//button[contains(text(),'退社')]"));
                         elementTaisya.Click();
                     }
                     catch (Exception e)
@@ -73,14 +73,13 @@ namespace SyuKKINNNOSUKE
                         Console.WriteLine(e);
                     }
 
-                    Thread.Sleep(TimeSpan.FromSeconds(3));
+                    Thread.Sleep(TimeSpan.FromSeconds(5));
 
                     System.Diagnostics.ProcessStartInfo psi = new System.Diagnostics.ProcessStartInfo();
 
                     psi.FileName = "shutdown.exe";
                     psi.Arguments = "-s -f";
 
-                    // シャットダウン
                     System.Diagnostics.Process p = System.Diagnostics.Process.Start(psi);
                 }
                 else
@@ -93,7 +92,7 @@ namespace SyuKKINNNOSUKE
                     // 退社 #tr_submit_form > table > tbody > tr > td:nth-child(3) > button
                     try
                     {
-                        // xPath の方がいいのでは？$x('//button[contains(text(), "出社")]')
+                        // xPath の方がいいのでは？IWebElement elementSyussya = webDriver.FindElement(By.XPath("//button[contains(text(),'出社')]"));
                         IWebElement elementSyussya = webDriver.FindElement(By.CssSelector("#tr_submit_form > table > tbody > tr > td:nth-child(1) > button"));
                         elementSyussya.Click();
                     }
