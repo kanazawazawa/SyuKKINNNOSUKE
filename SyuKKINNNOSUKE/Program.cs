@@ -199,32 +199,52 @@ namespace SyuKKINNNOSUKE
             var applicationName = ApplicationName();
             var exePath = $@"{Directory.GetCurrentDirectory()}\{applicationName}.exe";
 
-            // 72C24DD5-D70A-438B-8A42-98424B88AFB8(Windwos Script Hostを使用するオブジェクトの生成)
-            Type t = Type.GetTypeFromCLSID(new Guid("72C24DD5-D70A-438B-8A42-98424B88AFB8"));
-            object shell = Activator.CreateInstance(t);
+            object shell = null;
+            object shortcut = null;
+            try
+            {
+                // 72C24DD5-D70A-438B-8A42-98424B88AFB8(Windwos Script Hostを使用するオブジェクトの生成)
+                Type t = Type.GetTypeFromCLSID(new Guid("72C24DD5-D70A-438B-8A42-98424B88AFB8"));
+                shell = Activator.CreateInstance(t);
 
-            // ショートカットの作成
-            object shortcut = t.InvokeMember("CreateShortcut",
-                BindingFlags.InvokeMethod, null, shell,
-                new object[] { startUpFilePath });
+                // ショートカットの作成
+                shortcut = t.InvokeMember("CreateShortcut",
+                    BindingFlags.InvokeMethod, null, shell,
+                    new object[] { startUpFilePath });
 
-            // ショートカットの実行パス設定
-            t.InvokeMember("TargetPath",
-                BindingFlags.SetProperty, null, shortcut,
-                new object[] { exePath });
+                // ショートカットの実行パス設定
+                t.InvokeMember("TargetPath",
+                    BindingFlags.SetProperty, null, shortcut,
+                    new object[] { exePath });
 
-            // ショートカットファイルのアイコン設定
-            t.InvokeMember("IconLocation",
-                BindingFlags.SetProperty, null, shortcut,
-                new object[] { exePath + ",0" });
+                // ショートカットファイルのアイコン設定
+                t.InvokeMember("IconLocation",
+                    BindingFlags.SetProperty, null, shortcut,
+                    new object[] { exePath + ",0" });
 
-            // 保存
-            t.InvokeMember("Save",
-                BindingFlags.InvokeMethod,
-                null, shortcut, null);
+                // 保存
+                t.InvokeMember("Save",
+                    BindingFlags.InvokeMethod,
+                    null, shortcut, null);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+            finally
+            {
+                if (shortcut != null)
+                {
+                    Marshal.FinalReleaseComObject(shortcut);
+                    shortcut = null;
+                }
 
-            Marshal.FinalReleaseComObject(shortcut);
-            Marshal.FinalReleaseComObject(shell);
+                if (shell != null)
+                {
+                    Marshal.FinalReleaseComObject(shell);
+                    shell = null;
+                }
+            }
         }
 
         private static bool NotExistsStartupFile()
