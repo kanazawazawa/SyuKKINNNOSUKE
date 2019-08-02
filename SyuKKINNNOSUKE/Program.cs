@@ -59,7 +59,7 @@ namespace SyuKKINNNOSUKE
                 Environment.SetEnvironmentVariable(EnvironmentVarPassword, ToUnreadable(password, key), EnvironmentVariableTarget.User);
                 Environment.SetEnvironmentVariable(EnvironmentVarKey, key, EnvironmentVariableTarget.User);
 
-                if (!ExistsStartupFile())
+                if (NotExistsStartupFile())
                 {
                     Console.WriteLine("スタートアップに登録しますか？(y/(any))");
                     var res = Console.ReadLine();
@@ -222,9 +222,9 @@ namespace SyuKKINNNOSUKE
             Marshal.FinalReleaseComObject(shell);
         }
 
-        private static bool ExistsStartupFile()
+        private static bool NotExistsStartupFile()
         {
-            return File.Exists(StartupFilePath());
+            return !File.Exists(StartupFilePath());
         }
 
         private static string StartupFilePath()
