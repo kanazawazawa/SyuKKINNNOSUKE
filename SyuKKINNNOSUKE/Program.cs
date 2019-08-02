@@ -199,21 +199,26 @@ namespace SyuKKINNNOSUKE
             var applicationName = ApplicationName();
             var exePath = $@"{Directory.GetCurrentDirectory()}\{applicationName}.exe";
 
+            // 72C24DD5-D70A-438B-8A42-98424B88AFB8(Windwos Script Hostを使用するオブジェクトの生成)
             Type t = Type.GetTypeFromCLSID(new Guid("72C24DD5-D70A-438B-8A42-98424B88AFB8"));
             object shell = Activator.CreateInstance(t);
 
+            // ショートカットの作成
             object shortcut = t.InvokeMember("CreateShortcut",
                 BindingFlags.InvokeMethod, null, shell,
                 new object[] { startUpFilePath });
 
+            // ショートカットの実行パス設定
             t.InvokeMember("TargetPath",
                 BindingFlags.SetProperty, null, shortcut,
                 new object[] { exePath });
 
+            // ショートカットファイルのアイコン設定
             t.InvokeMember("IconLocation",
                 BindingFlags.SetProperty, null, shortcut,
                 new object[] { exePath + ",0" });
 
+            // 保存
             t.InvokeMember("Save",
                 BindingFlags.InvokeMethod,
                 null, shortcut, null);
