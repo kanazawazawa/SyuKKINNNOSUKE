@@ -4,6 +4,9 @@ using System;
 using System.Text;
 using System.Threading;
 using System.Security.Cryptography;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.IO;
 
 namespace SyuKKINNNOSUKE
 {
@@ -55,6 +58,16 @@ namespace SyuKKINNNOSUKE
                 key = Guid.NewGuid().ToString("N").Substring(0, password.Length);
                 Environment.SetEnvironmentVariable(EnvironmentVarPassword, ToUnreadable(password, key), EnvironmentVariableTarget.User);
                 Environment.SetEnvironmentVariable(EnvironmentVarKey, key, EnvironmentVariableTarget.User);
+
+                if (NotExistsStartupFile())
+                {
+                    Console.WriteLine("スタートアップに登録しますか？(y/(any))");
+                    var res = Console.ReadLine();
+                    if (res.ToLower() == "y")
+                    {
+                        SetStartUpFile();
+                    }
+                }
             }
             else
             {
@@ -180,7 +193,78 @@ namespace SyuKKINNNOSUKE
             return Encoding.ASCII.GetString(targetCharacterConvertedByte);
         }
 
+        private static void SetStartUpFile()
+        {
+            var startUpFilePath = StartupFilePath();
+            var applicationName = ApplicationName();
+            var exePath = $@"{Directory.GetCurrentDirectory()}\{applicationName}.exe";
 
+            object shell = null;
+            object shortcut = null;
+            try
+            {
+                // 72C24DD5-D70A-438B-8A42-98424B88AFB8(Windwos Script Hostを使用するオブジェクトの生成)
+                Type t = Type.GetTypeFromCLSID(new Guid("72C24DD5-D70A-438B-8A42-98424B88AFB8"));
+                shell = Activator.CreateInstance(t);
+
+                // ショートカットの作成
+                shortcut = t.InvokeMember("CreateShortcut",
+                    BindingFlags.InvokeMethod, null, shell,
+                    new object[] { startUpFilePath });
+
+                // ショートカットの実行パス設定
+                t.InvokeMember("TargetPath",
+                    BindingFlags.SetProperty, null, shortcut,
+                    new object[] { exePath });
+
+                // ショートカットファイルのアイコン設定
+                t.InvokeMember("IconLocation",
+                    BindingFlags.SetProperty, null, shortcut,
+                    new object[] { exePath + ",0" });
+
+                // 保存
+                t.InvokeMember("Save",
+                    BindingFlags.InvokeMethod,
+                    null, shortcut, null);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+            finally
+            {
+                if (shortcut != null)
+                {
+                    Marshal.FinalReleaseComObject(shortcut);
+                    shortcut = null;
+                }
+
+                if (shell != null)
+                {
+                    Marshal.FinalReleaseComObject(shell);
+                    shell = null;
+                }
+            }
+        }
+
+        private static bool NotExistsStartupFile()
+        {
+            return !File.Exists(StartupFilePath());
+        }
+
+        private static string StartupFilePath()
+        {
+            var applicationName = ApplicationName();
+            var startUpFileName = $"{applicationName}.lnk";
+            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Startup), startUpFileName);
+        }
+
+        private static string ApplicationName()
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+            var attribute = Attribute.GetCustomAttribute(assembly, typeof(AssemblyTitleAttribute)) as AssemblyTitleAttribute;
+            return attribute.Title;
+        }
 
     }
 }
